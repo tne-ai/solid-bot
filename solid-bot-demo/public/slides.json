@@ -1,0 +1,155 @@
+[
+  {
+    "subtitle": "Sovereign AI · Open Data · The Agent Economy\nOpen Data Institute · 2026",
+    "title": "Solid Web Bot",
+    "type": "title"
+  },
+  {
+    "title": "The Problem",
+    "type": "section"
+  },
+  {
+    "bullets": [
+      "Every app follows the same unspoken rule — collect everything, keep it forever, monetise later",
+      "Health records. Location history. Social graphs. Financial behaviour — held by companies whose business model is selling access",
+      "AI changed the stakes: data collected 'just in case' is now training material",
+      "The model is not broken by accident — it is the intended design",
+      "Users have no structural recourse. Privacy policies are not architecture"
+    ],
+    "title": "The Surveillance Web",
+    "type": "bullets"
+  },
+  {
+    "bullets": [
+      "CLOSED: Data centralised in silos — one company controls access, training, and monetisation",
+      "OPEN: Data lives with the user — apps earn permission, compete on experience not lock-in",
+      "Closed models produce scale fast. Open models produce trust.",
+      "The next generation of AI infrastructure will be built on the open model — or it will repeat every mistake of the web",
+      "Sovereign AI requires sovereign data. You cannot have one without the other"
+    ],
+    "title": "Closed vs Open Models",
+    "type": "bullets"
+  },
+  {
+    "title": "The Solution",
+    "type": "section"
+  },
+  {
+    "bullets": [
+      "Solid is a W3C specification — not a product, not a startup, a protocol",
+      "Data lives in a Pod — a personal data store controlled entirely by the user",
+      "Apps request permission. Permission can be revoked. Data travels with the person, not the platform",
+      "Proven at scale: 6.5M citizens in Flanders (Belgium) have Solid Pods for government services",
+      "NHS Greater Manchester — patient records shared between care providers without centralisation",
+      "Invented by Tim Berners-Lee. He thinks the web broke. Solid is how he is fixing it"
+    ],
+    "title": "Solid: A Structural Guarantee",
+    "type": "bullets"
+  },
+  {
+    "title": "The Agent Economy",
+    "type": "section"
+  },
+  {
+    "bullets": [
+      "AI agents are becoming the primary callers of APIs — not humans, not browsers",
+      "An agent can discover a service, negotiate terms, pay for compute, and act — all without a human in the loop",
+      "This creates a new trust problem: how do you know the agent calling you is who it claims to be?",
+      "x402: HTTP-native micropayment standard — agents pay per call in USDC on Base, gasless, settled on-chain",
+      "A2A (Agent-to-Agent): Google's open protocol for agent discovery, capability exchange, and task delegation",
+      "The infrastructure layer for the agent economy is being built now — Solid is part of it"
+    ],
+    "title": "AI Agents Are the New API Consumers",
+    "type": "bullets"
+  },
+  {
+    "bullets": [
+      "Traditional zero trust: verify every human, every device, every request",
+      "Agent zero trust: verify every agent — identity, behaviour scope, and economic accountability",
+      "An agent with no verifiable identity is a liability. An agent with no declared scope is unauditable",
+      "CISO agents need to enforce policy across fleets of AI agents, not just human users",
+      "Zero knowledge infrastructure: verify claims without revealing the underlying data",
+      "NVIDIA Nemotron and sovereign model deployments — on-premise AI with verifiable behaviour contracts"
+    ],
+    "title": "True Zero Trust for AI",
+    "type": "bullets"
+  },
+  {
+    "title": "KYA — Know Your Agent",
+    "type": "section"
+  },
+  {
+    "bullets": [
+      "KYA is to agents what KYC is to finance — verify before you trust",
+      "IDENTITY: WebID + Agent Card + DID — cryptographic proof of who the agent is",
+      "BEHAVIOUR: Skill contract + scope limits — what the agent is permitted to do, declared and signed",
+      "SAFETY: x402 payment bond — economic skin in the game, slashable if the agent misbehaves",
+      "An agent that has posted a KYA bond has a verifiable identity, declared scope, and accountability stake",
+      "KYA is the trust handshake that makes autonomous multi-agent systems safe to run"
+    ],
+    "title": "The Accountability Layer",
+    "type": "bullets"
+  },
+  {
+    "title": "The Solid Web Bot",
+    "type": "section"
+  },
+  {
+    "bullets": [
+      "Not a code generator. A Solid advisor that qualifies fit before building anything",
+      "Leads with Solid principles — data ownership, privacy, the open web",
+      "Honest when Solid is wrong for the job — routes to Firebase, IPFS, ActivityPub, or plain encrypted storage",
+      "The honesty is the evangelism: developers trust it because it does not oversell",
+      "Backed by the Open Data Institute — institutional credibility, not a startup pitch",
+      "Chat is always free. Scaffold (code generation) is $0.10 via x402 — compute costs, not a paywall"
+    ],
+    "title": "Built on Honest Evangelism",
+    "type": "bullets"
+  },
+  {
+    "bullets": [
+      "CHAT (/chat) — Conversational interface for developers, enterprises, and hobbyists",
+      "  Diagnoses use case → Assesses Solid fit → Scaffolds spec-compliant app → Download ZIP",
+      "",
+      "A2A (/agents) — Programmatic interface for AI agents",
+      "  Agent Card at /.well-known/agent-card.json — machine-readable capabilities and pricing",
+      "  JSON-RPC 2.0 at /a2a/jsonrpc — SendMessage, GetTask",
+      "  x402 payment gate on paid skills — agents pay autonomously, revenue funds ODI Solid development"
+    ],
+    "title": "Two Interfaces",
+    "type": "bullets"
+  },
+  {
+    "bullets": [
+      "When an agent calls POST /api/scaffold, the bot runs a 5-step KYA check:",
+      "",
+      "  1. Agent card fetched from caller's /.well-known/agent-card.json",
+      "  2. WebID resolved · DID signature cryptographically verified",
+      "  3. Skill scope checked against the agent's declared contract",
+      "  4. HTTP 402 issued · x402 payment received · $0.10 USDC on Base",
+      "  5. All checks passed · task accepted · tx hash returned",
+      "",
+      "If any step fails — wrong identity, out-of-scope request, no payment — the call is rejected",
+      "The check is structural. There is no override."
+    ],
+    "title": "KYA: How It Works",
+    "type": "bullets"
+  },
+  {
+    "title": "Try It",
+    "type": "section"
+  },
+  {
+    "bullets": [
+      "Chat:        https://solid-bot.dev.tne.ai",
+      "Agent Card:  https://solid-bot.dev.tne.ai/.well-known/agent-card.json",
+      "A2A:         https://solid-bot.dev.tne.ai/a2a/jsonrpc",
+      "",
+      "The chat is free. The mission is free. The infrastructure is what costs.",
+      "",
+      "If you are building on the open web — this is where to start."
+    ],
+    "title": "Get Started",
+    "type": "bullets"
+  }
+]

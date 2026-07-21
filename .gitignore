@@ -1,0 +1,6 @@
+node_modules/
+.env
+*.env.local
+.claude/
+TNE-CONTEXT/
+solid-app/.pod-data/

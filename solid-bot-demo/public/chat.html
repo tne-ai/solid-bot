@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chat — Solid Web Bot</title>
+  <style>
+    :root {
+      --bg: #0d0f14;
+      --surface: #151820;
+      --surface2: #1c2030;
+      --border: #252a3a;
+      --accent: #4f8ef7;
+      --accent2: #7c5cbf;
+      --green: #34d399;
+      --text: #e8eaf0;
+      --text-muted: #6b7280;
+      --text-dim: #9ca3af;
+      --bot-bubble: #1a2035;
+      --user-bubble: #1e2d4a;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg); color: var(--text);
+      height: 100vh; display: flex; flex-direction: column;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      text-decoration: none;
+    }
+    .nav-logo-icon {
+      width: 30px; height: 30px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem;
+    }
+    .nav-logo span { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+    .nav-links { display: flex; align-items: center; gap: 0.25rem; }
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      padding: 0.4rem 0.9rem;
+      border-radius: 8px;
+      transition: all 0.15s;
+    }
+    .nav-links a:hover { color: var(--text); background: var(--surface2); }
+    .nav-links a.active { color: var(--accent); }
+    .odi-badge { font-size: 0.7rem; color: var(--text-muted); background: var(--surface2); border: 1px solid var(--border); border-radius: 99px; padding: 2px 10px; margin-left: 0.5rem; }
+
+    #chat {
+      flex: 1; overflow-y: auto; padding: 1.5rem;
+      display: flex; flex-direction: column; gap: 1rem; scroll-behavior: smooth;
+    }
+    #chat::-webkit-scrollbar { width: 4px; }
+    #chat::-webkit-scrollbar-track { background: transparent; }
+    #chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .message { display: flex; gap: 0.75rem; max-width: 780px; animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .message.user { align-self: flex-end; flex-direction: row-reverse; }
+    .message.bot  { align-self: flex-start; }
+
+    .avatar {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; flex-shrink: 0; margin-top: 2px;
+    }
+    .avatar.bot-av  { background: linear-gradient(135deg, var(--accent), var(--accent2)); }
+    .avatar.user-av { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); }
+
+    .bubble {
+      border-radius: var(--radius); padding: 0.75rem 1rem;
+      font-size: 0.9rem; line-height: 1.6; max-width: 600px;
+    }
+    .message.bot .bubble  { background: var(--bot-bubble); border: 1px solid var(--border); border-top-left-radius: 4px; }
+    .message.user .bubble { background: var(--user-bubble); border: 1px solid #2a3a5a; border-top-right-radius: 4px; }
+
+    .bubble strong { color: var(--accent); font-weight: 600; }
+    .bubble em { color: var(--text-dim); font-style: italic; }
+    .bubble code { background: #0d1117; border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; font-family: 'SF Mono','Fira Code',monospace; font-size: 0.82rem; color: var(--green); }
+    .bubble pre { background: #0d1117; border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; overflow-x: auto; margin: 0.5rem 0; }
+    .bubble pre code { background: none; border: none; padding: 0; font-size: 0.82rem; }
+    .bubble p { margin-bottom: 0.5rem; }
+    .bubble p:last-child { margin-bottom: 0; }
+    .bubble ul, .bubble ol { margin: 0.4rem 0 0.5rem 1.2rem; }
+    .bubble li { margin-bottom: 0.2rem; }
+    .bubble blockquote { border-left: 3px solid var(--accent); padding-left: 0.75rem; margin: 0.5rem 0; color: var(--text-dim); font-style: italic; }
+    .bubble h2, .bubble h3 { font-size: 0.85rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin: 0.75rem 0 0.25rem; }
+    .bubble h2:first-child, .bubble h3:first-child { margin-top: 0; }
+    .bubble table { width: 100%; border-collapse: collapse; margin: 0.5rem 0; font-size: 0.82rem; }
+    .bubble th, .bubble td { border: 1px solid var(--border); padding: 0.4rem 0.6rem; text-align: left; }
+    .bubble th { background: var(--surface2); color: var(--text-dim); font-weight: 600; }
+
+    /* ── File rows ── */
+    .scaffold-files {
+      margin: 0.75rem 0; border: 1px solid var(--border);
+      border-radius: 8px; overflow: hidden;
+    }
+    .scaffold-header {
+      padding: 0.5rem 0.75rem; background: var(--surface2);
+      font-size: 0.72rem; font-weight: 600; color: var(--text-muted);
+      letter-spacing: 0.06em; text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+    .file-row { border-bottom: 1px solid var(--border); }
+    .file-row:last-child { border-bottom: none; }
+    .file-header {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.5rem 0.75rem; cursor: pointer;
+      transition: background 0.1s; user-select: none;
+    }
+    .file-header:hover { background: var(--surface2); }
+    .file-icon { font-size: 0.8rem; opacity: 0.7; }
+    .file-name { flex: 1; font-family: 'SF Mono','Fira Code',monospace; font-size: 0.78rem; color: var(--accent); }
+    .file-toggle { font-size: 0.65rem; color: var(--text-muted); transition: transform 0.15s; display: inline-block; }
+    .file-toggle.open { transform: rotate(90deg); }
+    .file-body { display: none; background: #0d1117; border-top: 1px solid var(--border); }
+    .file-body.open { display: block; }
+    .file-body pre { margin: 0; border: none; border-radius: 0; padding: 0.75rem 1rem; font-size: 0.78rem; overflow-x: auto; }
+    .file-body pre code { background: none; border: none; padding: 0; }
+
+    /* ── Actions bar ── */
+    .scaffold-actions {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin-top: 0.75rem; flex-wrap: wrap;
+    }
+    .download-btn {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none; border-radius: 8px; padding: 0.5rem 1.2rem;
+      font-size: 0.82rem; color: white; cursor: pointer;
+      font-weight: 600; transition: opacity 0.15s;
+    }
+    .download-btn:hover { opacity: 0.9; }
+    .download-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .file-count-label { font-size: 0.75rem; color: var(--text-muted); }
+
+    /* ── Typing ── */
+    .typing-indicator {
+      display: flex; align-items: center; gap: 4px;
+      padding: 0.75rem 1rem; background: var(--bot-bubble);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      border-top-left-radius: 4px; width: fit-content;
+    }
+    .typing-dot { width: 6px; height: 6px; background: var(--text-muted); border-radius: 50%; animation: typing 1.2s infinite; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typing {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30% { transform: translateY(-4px); opacity: 1; }
+    }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+    .chip {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 99px; padding: 0.35rem 0.9rem;
+      font-size: 0.78rem; color: var(--text-dim);
+      cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    }
+    .chip:hover { border-color: var(--accent); color: var(--accent); background: rgba(79,142,247,0.08); }
+
+    footer {
+      padding: 1rem 1.5rem 1.25rem; background: var(--surface);
+      border-top: 1px solid var(--border); flex-shrink: 0;
+    }
+    .input-row {
+      display: flex; gap: 0.75rem; align-items: flex-end;
+      max-width: 780px; margin: 0 auto;
+    }
+    #input {
+      flex: 1; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 0.65rem 1rem; font-size: 0.9rem;
+      color: var(--text); resize: none; min-height: 44px; max-height: 140px;
+      outline: none; font-family: inherit; line-height: 1.5; transition: border-color 0.15s;
+    }
+    #input::placeholder { color: var(--text-muted); }
+    #input:focus { border-color: var(--accent); }
+    #send {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none; border-radius: 10px; width: 44px; height: 44px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: opacity 0.15s, transform 0.1s;
+    }
+    #send:hover { opacity: 0.9; transform: scale(1.03); }
+    #send:active { transform: scale(0.97); }
+    #send:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    #send svg { width: 18px; height: 18px; fill: white; }
+    .input-hint { text-align: center; font-size: 0.68rem; color: var(--text-muted); margin-top: 0.5rem; }
+    .generating-status {
+      text-align: center; font-size: 0.72rem; color: var(--accent);
+      margin-top: 0.3rem; height: 1.1rem; display: none; align-items: center;
+      justify-content: center; gap: 0.4rem;
+    }
+    .generating-status.visible { display: flex; }
+    .gen-dot { width: 5px; height: 5px; background: var(--accent); border-radius: 50%; animation: typing 1.2s infinite; }
+    .gen-dot:nth-child(2) { animation-delay: 0.2s; }
+    .gen-dot:nth-child(3) { animation-delay: 0.4s; }
+    .scaffold-header.generating { color: var(--accent); }
+    .scaffold-header.generating::after { content: ''; display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-left: 6px; vertical-align: middle; animation: typing 1.2s infinite; }
+
+    /* ── Scaffold button ── */
+    #scaffold-btn {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; width: 44px; height: 44px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 1rem; transition: all 0.15s;
+    }
+    #scaffold-btn:hover { border-color: var(--accent); background: rgba(79,142,247,0.08); }
+
+    /* ── Scaffold modal ── */
+    .modal-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+      z-index: 100; align-items: center; justify-content: center; padding: 1rem;
+    }
+    .modal-backdrop.open { display: flex; }
+    .payment-modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.5rem; width: 100%; max-width: 420px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5); animation: fadeIn 0.2s;
+    }
+    .modal-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .modal-title h3 { font-size: 1rem; font-weight: 700; color: var(--text); }
+    .modal-close {
+      background: none; border: none; color: var(--text-muted); cursor: pointer;
+      font-size: 1rem; padding: 0.25rem 0.5rem; border-radius: 4px; transition: color 0.15s;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-price-badge {
+      font-size: 0.78rem; color: var(--accent); background: rgba(79,142,247,0.1);
+      border: 1px solid rgba(79,142,247,0.25); border-radius: 99px;
+      padding: 0.3rem 0.9rem; display: inline-block; margin-bottom: 1.1rem;
+    }
+    .modal-selects { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.1rem; }
+    .modal-selects select {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.55rem 0.9rem; font-size: 0.85rem;
+      color: var(--text); outline: none; cursor: pointer; font-family: inherit;
+    }
+    .modal-selects select:focus { border-color: var(--accent); }
+    .modal-steps { flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
+    .modal-step {
+      display: flex; align-items: center; gap: 0.6rem;
+      font-size: 0.82rem; color: var(--text-muted); padding: 0.35rem 0;
+    }
+    .modal-step .si { font-size: 0.9rem; min-width: 1.5rem; }
+    .modal-step.active { color: var(--text); }
+    .modal-step.done { color: var(--green); }
+    .modal-error {
+      color: #fca5a5; font-size: 0.78rem; background: rgba(248,113,113,0.06);
+      border: 1px solid rgba(248,113,113,0.18); border-radius: 8px;
+      padding: 0.65rem 0.9rem; margin-bottom: 1rem; line-height: 1.6;
+    }
+    .modal-pay-btn {
+      display: block; width: 100%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; border: none; border-radius: 8px; padding: 0.72rem 1rem;
+      font-size: 0.88rem; font-weight: 600; cursor: pointer;
+      transition: opacity 0.15s; margin-bottom: 0.75rem; font-family: inherit;
+    }
+    .modal-pay-btn:hover:not(:disabled) { opacity: 0.9; }
+    .modal-pay-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .modal-note { font-size: 0.72rem; color: var(--text-muted); text-align: center; line-height: 1.5; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="/">
+    <div class="nav-logo-icon">🌐</div>
+    <span>Solid Web Bot</span>
+  </a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/chat" class="active">Chat</a>
+    <a href="/agents">For Agents</a>
+  </div>
+  <span class="odi-badge">ODI</span>
+</nav>
+
+<div id="chat"></div>
+
+<footer>
+  <div class="input-row">
+    <textarea id="input" placeholder="Tell me what you're building, or ask anything about data ownership..." rows="1"></textarea>
+    <button id="scaffold-btn" title="Build Solid App ($0.10 USDC)" onclick="showScaffoldModal()">🔨</button>
+    <button id="send" title="Send">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+      </svg>
+    </button>
+  </div>
+  <p class="input-hint">Press Enter to send · Shift+Enter for new line</p>
+  <div class="generating-status" id="gen-status">
+    <div class="gen-dot"></div><div class="gen-dot"></div><div class="gen-dot"></div>
+    <span id="gen-label">Generating</span>
+  </div>
+</footer>
+
+<script>
+  const chat    = document.getElementById('chat');
+  const input   = document.getElementById('input');
+  const sendBtn = document.getElementById('send');
+  const history = [];
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function renderMarkdown(text) {
+    return text
+      .replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => `<pre><code>${escHtml(code.trim())}</code></pre>`)
+      .replace(/`([^`]+)`/g, (_, c) => `<code>${escHtml(c)}</code>`)
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/^&gt;\s*(.+)$/gm, '<blockquote>$1</blockquote>')
+      .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+      .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+      .replace(/^\|(.+)\|$/gm, row => {
+        const cells = row.split('|').slice(1,-1).map(c => c.trim());
+        return '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
+      })
+      .replace(/(<tr>.*<\/tr>\n?)+/g, m => `<table>${m}</table>`)
+      .replace(/^[-*] (.+)$/gm, '<li>$1</li>')
+      .replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`)
+      .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+      .split(/\n{2,}/)
+      .map(block => {
+        block = block.trim();
+        if (!block) return '';
+        if (/^<(pre|ul|ol|blockquote|h2|h3|li|table)/.test(block)) return block;
+        return `<p>${block.replace(/\n/g, '<br>')}</p>`;
+      })
+      .join('\n');
+  }
+
+  function fileIcon(filename) {
+    const ext = filename.split('.').pop().toLowerCase();
+    const icons = { js:'🟨', jsx:'⚛️', ts:'🔷', tsx:'⚛️', json:'📋', html:'🌐', css:'🎨', md:'📄', sh:'⬛', toml:'⚙️', rs:'🦀' };
+    return icons[ext] || '📄';
+  }
+
+  function toggleFile(header) {
+    const body = header.nextElementSibling;
+    const toggle = header.querySelector('.file-toggle');
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    toggle.classList.toggle('open', !isOpen);
+  }
+
+  // ── Incremental stream renderer ───────────────────────────────────────────
+  // Parses the stream line-by-line as it arrives.
+  // Prose streams normally. FILE: blocks appear as collapsed rows immediately.
+
+  function createStreamRenderer(container) {
+    let state = 'prose';       // prose | maybe_file | file_header | in_code | post_code
+    let lineBuffer = '';
+    let proseEl = null;
+    let proseText = '';
+    let fileGroup = null;
+    let fileCount = 0;
+    let currentCodeEl = null;
+    let currentCode = '';
+    let fullText = '';
+
+    function getProseEl() {
+      if (!proseEl) {
+        proseEl = document.createElement('div');
+        container.appendChild(proseEl);
+      }
+      return proseEl;
+    }
+
+    function flushProse() {
+      if (proseText.trim()) {
+        getProseEl().innerHTML = renderMarkdown(proseText);
+      }
+      proseEl = null;
+      proseText = '';
+    }
+
+    function updateProse() {
+      if (proseText.trim()) {
+        getProseEl().innerHTML = renderMarkdown(proseText);
+        scrollBottom();
+      }
+    }
+
+    function getFileGroup() {
+      if (!fileGroup) {
+        fileGroup = document.createElement('div');
+        fileGroup.className = 'scaffold-files';
+        const hdr = document.createElement('div');
+        hdr.className = 'scaffold-header generating';
+        hdr.textContent = 'Building';
+        fileGroup.appendChild(hdr);
+        container.appendChild(fileGroup);
+      }
+      return fileGroup;
+    }
+
+    function addFileRow(filename) {
+      flushProse();
+      fileCount++;
+      const _gl = document.getElementById('gen-label');
+      if (_gl) _gl.textContent = `Building file ${fileCount}\u2026`;
+      const group = getFileGroup();
+
+      const row = document.createElement('div');
+      row.className = 'file-row';
+
+      const header = document.createElement('div');
+      header.className = 'file-header';
+      header.innerHTML = `<span class="file-icon">${fileIcon(filename)}</span><span class="file-name">${escHtml(filename)}</span><span class="file-toggle">▶</span>`;
+      header.onclick = () => toggleFile(header);
+
+      const body = document.createElement('div');
+      body.className = 'file-body';
+      const pre = document.createElement('pre');
+      const code = document.createElement('code');
+      pre.appendChild(code);
+      body.appendChild(pre);
+
+      row.appendChild(header);
+      row.appendChild(body);
+      group.appendChild(row);
+
+      currentCodeEl = code;
+      currentCode = '';
+      scrollBottom();
+    }
+
+    function processLine(line) {
+      switch (state) {
+        case 'prose':
+          if (/^```\s*$/.test(line)) {
+            // bare ``` — could be outer FILE: wrapper, buffer it
+            state = 'maybe_file';
+          } else if (/FILE:\s*(\S+)/.test(line)) {
+            const m = line.match(/FILE:\s*(\S+)/);
+            addFileRow(m[1]);
+            state = 'file_header';
+          } else {
+            proseText += line + '\n';
+            updateProse();
+          }
+          break;
+
+        case 'maybe_file':
+          if (/FILE:\s*(\S+)/.test(line)) {
+            // confirmed outer wrapper — start file row
+            const m = line.match(/FILE:\s*(\S+)/);
+            addFileRow(m[1]);
+            state = 'file_header';
+          } else {
+            // was just a regular code fence — restore prose
+            proseText += '```\n' + line + '\n';
+            state = 'prose';
+            updateProse();
+          }
+          break;
+
+        case 'file_header':
+          if (/^```/.test(line)) {
+            state = 'in_code';
+            currentCode = '';
+          }
+          // skip blank lines between FILE: and opening fence
+          break;
+
+        case 'in_code':
+          if (/^```\s*$/.test(line)) {
+            // end of inner code block
+            if (currentCodeEl) currentCodeEl.textContent = currentCode.trim();
+            state = 'post_code';
+          } else {
+            currentCode += line + '\n';
+            if (currentCodeEl) currentCodeEl.textContent = currentCode;
+            scrollBottom();
+          }
+          break;
+
+        case 'post_code':
+          if (/^```\s*$/.test(line)) {
+            // outer closing fence — consumed, back to prose
+            state = 'prose';
+            fileGroup = null; // new file group after a break
+          } else if (/FILE:\s*(\S+)/.test(line)) {
+            const m = line.match(/FILE:\s*(\S+)/);
+            addFileRow(m[1]);
+            state = 'file_header';
+          } else if (line.trim() === '') {
+            state = 'prose';
+          } else {
+            state = 'prose';
+            proseText += line + '\n';
+            updateProse();
+          }
+          break;
+      }
+    }
+
+    return {
+      push(chunk) {
+        fullText += chunk;
+        lineBuffer += chunk;
+        const lines = lineBuffer.split('\n');
+        lineBuffer = lines.pop();
+        for (const line of lines) processLine(line);
+      },
+      finalize() {
+        if (lineBuffer) { processLine(lineBuffer); lineBuffer = ''; }
+        if (proseText.trim()) updateProse();
+        // Mark scaffold header as done
+        if (fileGroup) {
+          const hdr = fileGroup.querySelector('.scaffold-header');
+          if (hdr) { hdr.className = 'scaffold-header'; hdr.textContent = 'App Files'; }
+        }
+        return fullText;
+      },
+      hasFiles() { return fileCount > 0; },
+      getFileCount() { return fileCount; },
+      getFullText() { return fullText; },
+    };
+  }
+
+  // ── Download ZIP ──────────────────────────────────────────────────────────
+
+  async function downloadZip(btn, rawText) {
+    const orig = btn.innerHTML;
+    btn.innerHTML = 'Downloading...';
+    btn.disabled = true;
+    try {
+      const res = await fetch('/api/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scaffold: rawText }),
+      });
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'solid-app.zip'; a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) { console.error('Download failed:', err); }
+    btn.innerHTML = orig;
+    btn.disabled = false;
+  }
+
+  function addScaffoldActions(container, rawText, fileCount) {
+    const bar = document.createElement('div');
+    bar.className = 'scaffold-actions';
+    const btn = document.createElement('button');
+    btn.className = 'download-btn';
+    btn.innerHTML = '⬇ Download ZIP';
+    btn.onclick = () => downloadZip(btn, rawText);
+    const label = document.createElement('span');
+    label.className = 'file-count-label';
+    label.textContent = `${fileCount} file${fileCount !== 1 ? 's' : ''} ready`;
+    bar.appendChild(btn);
+    bar.appendChild(label);
+    container.appendChild(bar);
+  }
+
+  // ── Message rendering ─────────────────────────────────────────────────────
+
+  function appendMessage(role, text, chips = []) {
+    const wrap = document.createElement('div');
+    wrap.className = `message ${role}`;
+    const av = document.createElement('div');
+    av.className = `avatar ${role === 'bot' ? 'bot-av' : 'user-av'}`;
+    av.textContent = role === 'bot' ? '🌐' : '👤';
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    const messageContent = document.createElement('div');
+    messageContent.className = 'message-content';
+    messageContent.innerHTML = renderMarkdown(text);
+
+    if (chips.length) {
+      const row = document.createElement('div');
+      row.className = 'chips';
+      chips.forEach(label => {
+        const c = document.createElement('button');
+        c.className = 'chip'; c.textContent = label;
+        c.onclick = () => sendMessage(label);
+        row.appendChild(c);
+      });
+      messageContent.appendChild(row);
+    }
+
+    bubble.appendChild(messageContent);
+    wrap.appendChild(av);
+    wrap.appendChild(bubble);
+    chat.appendChild(wrap);
+    scrollBottom();
+    return messageContent;
+  }
+
+  function appendTyping() {
+    const wrap = document.createElement('div');
+    wrap.className = 'message bot'; wrap.id = 'typing';
+    const av = document.createElement('div');
+    av.className = 'avatar bot-av'; av.textContent = '🌐';
+    const ind = document.createElement('div');
+    ind.className = 'typing-indicator';
+    ind.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+    wrap.appendChild(av); wrap.appendChild(ind);
+    chat.appendChild(wrap); scrollBottom();
+    return wrap;
+  }
+
+  function appendStreamBubble() {
+    const wrap = document.createElement('div');
+    wrap.className = 'message bot';
+    const av = document.createElement('div');
+    av.className = 'avatar bot-av'; av.textContent = '🌐';
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    const content = document.createElement('div');
+    content.className = 'message-content';
+    bubble.appendChild(content);
+    wrap.appendChild(av); wrap.appendChild(bubble);
+    chat.appendChild(wrap); scrollBottom();
+    return content;
+  }
+
+  // Only auto-scroll if the user hasn't scrolled up manually
+  function scrollBottom() {
+    const threshold = 80;
+    const nearBottom = chat.scrollHeight - chat.scrollTop - chat.clientHeight < threshold;
+    if (nearBottom) chat.scrollTop = chat.scrollHeight;
+  }
+
+  async function sendMessage(text) {
+    if (!text.trim()) return;
+    appendMessage('user', text);
+    history.push({ role: 'user', content: text });
+    input.value = ''; input.style.height = 'auto';
+    sendBtn.disabled = true;
+    const genStatus = document.getElementById('gen-status');
+    const genLabel = document.getElementById('gen-label');
+    genStatus.classList.add('visible');
+    genLabel.textContent = 'Generating';
+    const typing = appendTyping();
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: history }),
+      });
+      typing.remove();
+
+      const container = appendStreamBubble();
+      const renderer = createStreamRenderer(container);
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const data = line.slice(6);
+          if (data === '[DONE]') break;
+          try {
+            const { text: chunk } = JSON.parse(data);
+            if (chunk) renderer.push(chunk);
+          } catch {}
+        }
+      }
+
+      const fullText = renderer.finalize();
+
+      // Add download button if files were generated
+      if (renderer.hasFiles()) {
+        addScaffoldActions(container, fullText, renderer.getFileCount());
+      }
+
+      history.push({ role: 'assistant', content: fullText });
+    } catch (err) {
+      typing.remove();
+      appendMessage('bot', `Something went wrong: ${err.message}`);
+    }
+
+    genStatus.classList.remove('visible');
+    sendBtn.disabled = false;
+    input.focus();
+  }
+
+  sendBtn.onclick = () => sendMessage(input.value);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input.value); }
+  });
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 140) + 'px';
+  });
+
+  appendMessage('bot',
+    `The web wasn't supposed to work this way.
+
+Every app ever built collected data that wasn't really the developer's to keep. Health data. Social graphs. Location history. Financial behaviour. All held by companies whose business model is built on selling access to it.
+
+There is a different way to build — where users own their data, apps earn permission to use it, and you compete on experience rather than lock-in.
+
+That's what Solid makes possible. And it's ready to build on today.
+
+**What brought you here?**`,
+    [
+      "I'm building an app and want to explore this",
+      "I've heard of Solid but don't know where to start",
+      "I already know Solid — help me build",
+      "Why does data ownership even matter?",
+    ]
+  );
+
+
+  // ── x402 payment utils ────────────────────────────────────────────────────
+  const _X402_NETS = {
+    'base-sepolia': { id: 84532, hex: '0x14A34', name: 'Base Sepolia',
+      rpc: 'https://sepolia.base.org', explorer: 'https://sepolia.basescan.org' },
+    'base': { id: 8453, hex: '0x2105', name: 'Base',
+      rpc: 'https://mainnet.base.org', explorer: 'https://basescan.org' },
+  };
+
+  async function _ensureNetwork(network) {
+    const c = _X402_NETS[network];
+    if (!c) throw new Error('Unknown network: ' + network);
+    try {
+      await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: c.hex }] });
+    } catch(e) {
+      if (e.code === 4902 || e.code === -32603) {
+        await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{
+          chainId: c.hex, chainName: c.name,
+          nativeCurrency: { name:'Ethereum', symbol:'ETH', decimals:18 },
+          rpcUrls: [c.rpc], blockExplorerUrls: [c.explorer],
+        }]});
+      } else throw e;
+    }
+  }
+
+  async function _buildPaymentHeader(from, req) {
+    const nonce = '0x' + Array.from(crypto.getRandomValues(new Uint8Array(32)))
+      .map(b => b.toString(16).padStart(2,'0')).join('');
+    const now = Math.floor(Date.now() / 1000);
+    const validAfter  = (now - 600).toString();
+    const validBefore = (now + (req.maxTimeoutSeconds || 60)).toString();
+    const chainId = _X402_NETS[req.network]?.id;
+    if (!chainId) throw new Error('Unknown network: ' + req.network);
+
+    const sig = await window.ethereum.request({
+      method: 'eth_signTypedData_v4',
+      params: [from, JSON.stringify({
+        types: {
+          EIP712Domain: [
+            { name:'name', type:'string' }, { name:'version', type:'string' },
+            { name:'chainId', type:'uint256' }, { name:'verifyingContract', type:'address' },
+          ],
+          TransferWithAuthorization: [
+            { name:'from', type:'address' }, { name:'to', type:'address' },
+            { name:'value', type:'uint256' }, { name:'validAfter', type:'uint256' },
+            { name:'validBefore', type:'uint256' }, { name:'nonce', type:'bytes32' },
+          ],
+        },
+        domain: { name: req.extra?.name || 'USDC', version: req.extra?.version || '2',
+          chainId, verifyingContract: req.asset },
+        primaryType: 'TransferWithAuthorization',
+        message: { from, to: req.payTo, value: req.maxAmountRequired,
+          validAfter, validBefore, nonce },
+      })],
+    });
+
+    return btoa(JSON.stringify({
+      x402Version: 1, scheme: 'exact', network: req.network,
+      payload: { signature: sig,
+        authorization: { from, to: req.payTo, value: req.maxAmountRequired,
+          validAfter, validBefore, nonce } },
+    }));
+  }
+
+  function showScaffoldModal() {
+    document.getElementById('scaffold-backdrop').classList.add('open');
+    document.getElementById('m-steps').style.display = 'none';
+    document.getElementById('m-error').style.display = 'none';
+    const btn = document.getElementById('m-pay-btn');
+    btn.disabled = false; btn.textContent = 'Connect Wallet & Pay';
+  }
+
+  function closeScaffoldModal(e) {
+    if (!e || e.target === document.getElementById('scaffold-backdrop')) {
+      document.getElementById('scaffold-backdrop').classList.remove('open');
+    }
+  }
+
+  function mStep(n, done) {
+    const el = document.getElementById('m-s' + n);
+    if (!el) return;
+    el.className = 'modal-step' + (done ? ' done' : ' active');
+    el.querySelector('.si').textContent = done ? '✅' : '⚡';
+  }
+
+  async function doModalPayment() {
+    const btn = document.getElementById('m-pay-btn');
+    const steps = document.getElementById('m-steps');
+    const errBox = document.getElementById('m-error');
+    const framework = document.getElementById('m-framework').value;
+    const dataType  = document.getElementById('m-datatype').value;
+
+    if (!window.ethereum) {
+      errBox.textContent = 'No wallet detected. Install MetaMask or Coinbase Wallet to pay.';
+      errBox.style.display = 'block'; return;
+    }
+
+    btn.disabled = true; btn.textContent = 'Working…';
+    steps.style.display = 'block'; errBox.style.display = 'none';
+    for (let i=0;i<4;i++) {
+      const el = document.getElementById('m-s'+i);
+      el.className = 'modal-step'; el.querySelector('.si').textContent = '⏳';
+    }
+
+    try {
+      mStep(0, false);
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const from = accounts[0];
+
+      const probe = await fetch('/api/scaffold', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ framework, dataType, accessPattern: 'private' }),
+      });
+
+      if (probe.status !== 402) {
+        const d = await probe.json();
+        closeScaffoldModal();
+        appendMessage('bot', `**Scaffold generated** (no payment required)
+
+${d.scaffold || JSON.stringify(d, null, 2)}`);
+        return;
+      }
+
+      const body402 = await probe.json();
+      const req = body402.accepts?.[0];
+      if (!req) throw new Error('Server returned 402 without payment requirements.');
+
+      await _ensureNetwork(req.network);
+      mStep(0, true);
+
+      mStep(1, false);
+      const xPayment = await _buildPaymentHeader(from, req);
+      mStep(1, true);
+
+      mStep(2, false);
+      const paid = await fetch('/api/scaffold', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-PAYMENT': xPayment },
+        body: JSON.stringify({ framework, dataType, accessPattern: 'private' }),
+      });
+      mStep(2, true);
+
+      mStep(3, false);
+      const data = await paid.json();
+      mStep(3, true);
+
+      closeScaffoldModal();
+
+      const txHash = data.txHash;
+      const intro = txHash
+        ? `**Scaffold ready** · Payment settled ✅
+*tx: ${txHash}*
+
+`
+        : `**Scaffold ready** · ${framework} · ${dataType}
+
+`;
+      appendMessage('bot', intro + (data.scaffold || JSON.stringify(data, null, 2)));
+      history.push({ role: 'assistant', content: intro + (data.scaffold || '') });
+
+    } catch(e) {
+      errBox.textContent = e.message || String(e);
+      errBox.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Connect Wallet & Pay';
+    }
+  }
+  // ── end x402 ──────────────────────────────────────────────────────────────
+
+</script>
+
+
+<div class="modal-backdrop" id="scaffold-backdrop" onclick="closeScaffoldModal(event)">
+  <div class="payment-modal" onclick="event.stopPropagation()">
+    <div class="modal-title">
+      <h3>Build a Solid App</h3>
+      <button class="modal-close" onclick="closeScaffoldModal()">✕</button>
+    </div>
+    <div class="modal-price-badge">💳 $0.10 USDC · Base Sepolia · x402</div>
+    <div class="modal-selects">
+      <select id="m-framework">
+        <option value="vanilla">Vanilla JS</option>
+        <option value="react">React</option>
+        <option value="nextjs">Next.js</option>
+      </select>
+      <select id="m-datatype">
+        <option value="notes">Notes / Documents</option>
+        <option value="health">Health Records</option>
+        <option value="profile">User Profile</option>
+        <option value="calendar">Calendar Events</option>
+      </select>
+    </div>
+    <div class="modal-steps" id="m-steps">
+      <div class="modal-step" id="m-s0"><span class="si">⏳</span> Connect wallet &amp; switch to Base Sepolia</div>
+      <div class="modal-step" id="m-s1"><span class="si">⏳</span> Sign EIP-3009 authorization (no gas)</div>
+      <div class="modal-step" id="m-s2"><span class="si">⏳</span> Facilitator verifies &amp; settles USDC</div>
+      <div class="modal-step" id="m-s3"><span class="si">⏳</span> Generating your app…</div>
+    </div>
+    <div class="modal-error" id="m-error"></div>
+    <button class="modal-pay-btn" id="m-pay-btn" onclick="doModalPayment()">Connect Wallet &amp; Pay</button>
+    <p class="modal-note">Testnet only. Requires USDC on Base Sepolia. <a href="https://faucet.circle.com" target="_blank" style="color:var(--accent)">Get test USDC →</a></p>
+  </div>
+</div>
+
+</body>
+</html>

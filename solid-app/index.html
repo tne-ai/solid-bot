@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Solid App</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: system-ui, sans-serif; background: #f5f5f5; color: #222; }
+      header { background: #1a1a2e; color: white; padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem; }
+      header h1 { font-size: 1.25rem; font-weight: 600; }
+      .badge { background: #4a9eff; color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 99px; font-weight: 700; letter-spacing: 0.05em; }
+      main { max-width: 700px; margin: 2rem auto; padding: 0 1rem; }
+      .card { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+      h2 { font-size: 0.75rem; font-weight: 600; margin-bottom: 1rem; color: #444; text-transform: uppercase; letter-spacing: 0.05em; }
+      label { display: block; font-size: 0.875rem; color: #666; margin-bottom: 0.25rem; }
+      input { width: 100%; border: 1px solid #ddd; border-radius: 6px; padding: 0.5rem 0.75rem; font-size: 0.9rem; margin-bottom: 0.75rem; }
+      input:focus { outline: none; border-color: #4a9eff; }
+      button { background: #1a1a2e; color: white; border: none; border-radius: 6px; padding: 0.5rem 1.25rem; font-size: 0.875rem; cursor: pointer; font-weight: 500; }
+      button:hover { background: #2d2d4e; }
+      button.btn-danger { background: #c0392b; }
+      button.btn-danger:hover { background: #a93226; }
+      .status { font-size: 0.85rem; padding: 0.5rem 0.75rem; border-radius: 6px; margin-top: 0.75rem; }
+      .status.ok { background: #e8f5e9; color: #2e7d32; }
+      .status.err { background: #ffebee; color: #c62828; }
+      .status.info { background: #e3f2fd; color: #1565c0; }
+      #profile-section { display: none; }
+      #profile-name { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.25rem; }
+      #profile-webid { font-size: 0.8rem; color: #888; word-break: break-all; margin-bottom: 1rem; }
+      .webid-chip { background: #f0f0f0; border-radius: 6px; padding: 0.4rem 0.75rem; font-size: 0.78rem; font-family: monospace; word-break: break-all; margin-bottom: 1rem; }
+      textarea { width: 100%; border: 1px solid #ddd; border-radius: 6px; padding: 0.5rem 0.75rem; font-size: 0.875rem; resize: vertical; min-height: 80px; margin-bottom: 0.75rem; }
+      .note-list { list-style: none; margin-top: 1rem; }
+      .note-list li { border-bottom: 1px solid #f0f0f0; padding: 0.65rem 0; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+      .note-list li:last-child { border-bottom: none; }
+      .note-text { flex: 1; }
+      .note-date { font-size: 0.75rem; color: #aaa; white-space: nowrap; }
+      .empty { color: #aaa; font-size: 0.875rem; text-align: center; padding: 1rem 0; justify-content: center !important; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Solid App</h1>
+      <span class="badge">LOCAL</span>
+    </header>
+    <main>
+      <div id="login-section" class="card">
+        <h2>Connect to Pod</h2>
+        <label>Pod / OIDC Provider URL</label>
+        <input id="issuer" type="url" value="http://localhost:3000" />
+        <button id="login-btn">Login with Solid</button>
+        <div id="login-status"></div>
+      </div>
+
+      <div id="profile-section">
+        <div class="card">
+          <h2>Profile</h2>
+          <div id="profile-name"></div>
+          <div id="profile-webid"></div>
+          <button class="btn-danger" id="logout-btn">Logout</button>
+        </div>
+
+        <div class="card">
+          <h2>Notes (stored in your Pod)</h2>
+          <div class="webid-chip" id="notes-url"></div>
+          <textarea id="note-input" placeholder="Write a note..."></textarea>
+          <button id="save-btn">Save Note</button>
+          <div id="save-status"></div>
+          <ul class="note-list" id="note-list">
+            <li class="empty">No notes yet.</li>
+          </ul>
+        </div>
+      </div>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

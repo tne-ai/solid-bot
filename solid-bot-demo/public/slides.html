@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solid Web Bot — Presentation</title>
+  <style>
+    :root {
+      --bg: #0d0f14;
+      --surface: #151820;
+      --surface2: #1c2030;
+      --border: #252a3a;
+      --accent: #4f8ef7;
+      --accent2: #7c5cbf;
+      --green: #34d399;
+      --text: #e8eaf0;
+      --text-muted: #6b7280;
+      --text-dim: #9ca3af;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
+
+    /* ── Deck container ── */
+    #deck { width: 100vw; height: 100vh; position: relative; }
+
+    /* ── Slide base ── */
+    .slide {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      padding: 6vw 8vw;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    .slide.active { opacity: 1; pointer-events: all; }
+
+    /* ── Title slide ── */
+    .slide-title .deck-logo { font-size: 3.5rem; margin-bottom: 1.5rem; }
+    .slide-title h1 {
+      font-size: clamp(2.4rem, 5vw, 4rem); font-weight: 700; text-align: center;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 1.2rem;
+    }
+    .slide-title .subtitle {
+      font-size: clamp(0.9rem, 1.6vw, 1.15rem); color: var(--text-muted);
+      text-align: center; line-height: 1.7; white-space: pre-line;
+    }
+
+    /* ── Section divider ── */
+    .slide-section { background: radial-gradient(ellipse at center, #1a1f30 0%, var(--bg) 70%); }
+    .slide-section h2 {
+      font-size: clamp(2rem, 4.5vw, 3.5rem); font-weight: 700; text-align: center;
+      color: var(--accent); letter-spacing: -0.02em;
+    }
+    .slide-section::before {
+      content: ''; display: block; width: 60px; height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 2px; margin-bottom: 1.5rem;
+    }
+
+    /* ── Bullets slide ── */
+    .slide-bullets { align-items: flex-start; }
+    .slide-bullets h2 {
+      font-size: clamp(1.4rem, 2.5vw, 2rem); font-weight: 700; margin-bottom: 2rem;
+      color: var(--text);
+    }
+    .slide-bullets h2 .accent { color: var(--accent); }
+    .bullet-list { list-style: none; width: 100%; max-width: 900px; }
+    .bullet-list li {
+      display: flex; gap: 1rem; align-items: flex-start;
+      font-size: clamp(0.85rem, 1.5vw, 1.05rem); color: var(--text-dim);
+      line-height: 1.65; margin-bottom: 0.9rem;
+    }
+    .bullet-list li.empty { margin-bottom: 0.2rem; }
+    .bullet-list li.empty::before { content: none; }
+    .bullet-list li::before {
+      content: '→'; color: var(--accent); flex-shrink: 0;
+      margin-top: 0.05em; font-weight: 600;
+    }
+    .bullet-list li strong { color: var(--text); }
+    .bullet-list li.sub {
+      padding-left: 1.8rem; color: var(--text-muted);
+      font-size: clamp(0.78rem, 1.3vw, 0.92rem);
+    }
+    .bullet-list li.sub::before { content: '·'; color: var(--text-muted); }
+
+    /* ── Progress bar ── */
+    #progress {
+      position: fixed; bottom: 0; left: 0;
+      height: 3px; background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transition: width 0.35s ease;
+    }
+
+    /* ── Nav hint ── */
+    #nav-hint {
+      position: fixed; bottom: 1.4rem; right: 1.8rem;
+      font-size: 0.72rem; color: var(--text-muted);
+      display: flex; gap: 0.6rem; align-items: center;
+    }
+    #nav-hint kbd {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 4px; padding: 0.15rem 0.45rem; font-size: 0.7rem;
+    }
+
+    /* ── Slide counter ── */
+    #counter {
+      position: fixed; bottom: 1.4rem; left: 1.8rem;
+      font-size: 0.72rem; color: var(--text-muted);
+    }
+
+    /* ── Background grid ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; pointer-events: none;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 60px 60px;
+      opacity: 0.18;
+    }
+  </style>
+</head>
+<body>
+<div id="deck"></div>
+<div id="progress"></div>
+<div id="counter"></div>
+<div id="nav-hint">
+  <kbd>←</kbd><kbd>→</kbd> navigate &nbsp;·&nbsp; <kbd>F</kbd> fullscreen
+</div>
+
+<script>
+  let slides = [];
+  let current = 0;
+
+  function buildSlide(s) {
+    const el = document.createElement('div');
+    el.className = 'slide';
+
+    if (s.type === 'title') {
+      el.classList.add('slide-title');
+      el.innerHTML = `
+        <div class="deck-logo">🌐</div>
+        <h1>${s.title}</h1>
+        <p class="subtitle">${s.subtitle || ''}</p>`;
+
+    } else if (s.type === 'section') {
+      el.classList.add('slide-section');
+      el.innerHTML = `<h2>${s.title}</h2>`;
+
+    } else if (s.type === 'bullets') {
+      el.classList.add('slide-bullets');
+      const items = (s.bullets || []).map(b => {
+        if (!b.trim()) return `<li class="empty"> </li>`;
+        if (b.startsWith('  ')) return `<li class="sub">${b.trim()}</li>`;
+        // Bold text before first colon if it's an ALL-CAPS label
+        const formatted = b.replace(/^([A-Z][A-Z /()]+):/, '<strong>$1:</strong>');
+        return `<li>${formatted}</li>`;
+      }).join('');
+      el.innerHTML = `<h2>${s.title}</h2><ul class="bullet-list">${items}</ul>`;
+    }
+
+    return el;
+  }
+
+  function goto(n) {
+    const deck = document.getElementById('deck');
+    const all = deck.querySelectorAll('.slide');
+    all.forEach((s, i) => s.classList.toggle('active', i === n));
+    current = n;
+    document.getElementById('progress').style.width = `${((n + 1) / slides.length) * 100}%`;
+    document.getElementById('counter').textContent = `${n + 1} / ${slides.length}`;
+  }
+
+  fetch('/slides.json')
+    .then(r => r.json())
+    .then(data => {
+      slides = data;
+      const deck = document.getElementById('deck');
+      slides.forEach(s => deck.appendChild(buildSlide(s)));
+      goto(0);
+    });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ')  goto(Math.min(current + 1, slides.length - 1));
+    if (e.key === 'ArrowLeft')                     goto(Math.max(current - 1, 0));
+    if (e.key === 'f' || e.key === 'F')            document.documentElement.requestFullscreen?.();
+  });
+
+  document.addEventListener('click', e => {
+    if (e.clientX > window.innerWidth / 2) goto(Math.min(current + 1, slides.length - 1));
+    else goto(Math.max(current - 1, 0));
+  });
+</script>
+</body>
+</html>

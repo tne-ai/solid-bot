@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>For AI Agents — Solid Web Bot</title>
+  <style>
+    :root {
+      --bg: #0d0f14; --surface: #151820; --surface2: #1c2030; --surface3: #242a3a;
+      --border: #252a3a; --border2: #2e3a50;
+      --accent: #4f8ef7; --accent2: #7c5cbf; --accent3: #06b6d4;
+      --green: #34d399; --purple: #c084fc; --orange: #fb923c;
+      --text: #e8eaf0; --text-muted: #6b7280; --text-dim: #9ca3af;
+      --radius: 14px; --radius-sm: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── Nav ── */
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 1rem 2rem; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+    .nav-logo { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; }
+    .nav-logo-icon { width: 30px; height: 30px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+    .nav-logo span { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+    .nav-links { display: flex; align-items: center; gap: 0.25rem; }
+    .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 0.85rem; padding: 0.4rem 0.9rem; border-radius: 8px; transition: all 0.15s; }
+    .nav-links a:hover { color: var(--text); background: var(--surface2); }
+    .nav-links a.active { color: var(--accent); }
+    .odi-badge { font-size: 0.68rem; color: var(--text-muted); background: var(--surface2); border: 1px solid var(--border2); border-radius: 99px; padding: 2px 10px; margin-left: 0.5rem; letter-spacing: 0.02em; }
+
+    main { max-width: 860px; margin: 0 auto; padding: 3rem 2rem 6rem; }
+
+    /* ── Header ── */
+    .page-header { margin-bottom: 2.5rem; }
+    .page-eyebrow { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; color: var(--green); background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.2); border-radius: 99px; padding: 0.28rem 0.85rem; margin-bottom: 1.1rem; letter-spacing: 0.06em; text-transform: uppercase; }
+    .page-header h1 { font-size: 2.1rem; font-weight: 700; margin-bottom: 0.75rem; letter-spacing: -0.03em; background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .page-header p { color: var(--text-dim); font-size: 0.92rem; line-height: 1.75; max-width: 540px; }
+
+    /* ── Quick-ref ── */
+    .quick-ref { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 2.5rem; }
+    .qr-item { display: inline-flex; align-items: center; gap: 0.4rem; background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 0.3rem 0.7rem; font-size: 0.72rem; }
+    .qr-label { color: var(--text-muted); }
+    .qr-value { color: var(--accent); font-family: 'SF Mono','Fira Code',monospace; }
+
+    /* ── Section headers ── */
+    h2 { display: flex; align-items: center; gap: 0.6rem; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 2.75rem 0 1.1rem; }
+    h2::before { content: ''; display: block; width: 3px; height: 14px; background: linear-gradient(180deg, var(--accent), var(--accent2)); border-radius: 2px; flex-shrink: 0; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    @keyframes slideUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ── Skills table ── */
+    .skills-table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 1.5rem; }
+    .skills-table th { background: var(--surface2); padding: 0.65rem 1rem; text-align: left; font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); }
+    .skills-table td { padding: 0.85rem 1rem; font-size: 0.84rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .skills-table tr:last-child td { border-bottom: none; }
+    .skills-table tr:hover td { background: rgba(255,255,255,0.015); }
+    .skills-table tr.row-paid td { background: rgba(79,142,247,0.03); }
+    .skills-table tr.row-paid:hover td { background: rgba(79,142,247,0.06); }
+    .skill-name-col { font-weight: 600; color: var(--text); }
+    .skill-id-col { font-family: 'SF Mono','Fira Code',monospace; font-size: 0.68rem; color: var(--text-muted); display: block; margin-top: 3px; opacity: 0.7; }
+    .skill-desc-col { color: var(--text-dim); font-size: 0.82rem; line-height: 1.5; }
+    .badge-free { display: inline-block; background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.25); color: var(--green); font-size: 0.68rem; padding: 2px 9px; border-radius: 99px; white-space: nowrap; font-weight: 600; letter-spacing: 0.02em; }
+    .badge-paid { display: inline-block; background: rgba(79,142,247,0.1); border: 1px solid rgba(79,142,247,0.3); color: var(--accent); font-size: 0.68rem; padding: 2px 9px; border-radius: 99px; white-space: nowrap; font-weight: 600; letter-spacing: 0.02em; }
+
+    /* ── x402 demo card ── */
+    .x402-demo { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius); overflow: hidden; margin-bottom: 1rem; box-shadow: 0 4px 24px rgba(0,0,0,0.3); }
+    .x402-demo-hdr { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding: 1rem 1.5rem; background: linear-gradient(135deg, rgba(79,142,247,0.08) 0%, rgba(124,92,191,0.06) 100%); border-bottom: 1px solid var(--border2); }
+    .x402-demo-title { font-size: 0.88rem; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+    .x402-demo-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.15rem; }
+    .x402-demo-body { padding: 1.25rem 1.5rem; }
+
+    /* wallet status pill */
+    .ws { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.71rem; color: var(--text-muted); padding: 0.25rem 0.65rem; border-radius: 99px; background: var(--surface2); border: 1px solid var(--border); white-space: nowrap; flex-shrink: 0; }
+    .ws-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--text-muted); opacity: 0.4; flex-shrink: 0; }
+    .ws.ws-none .ws-dot { background: #f87171; opacity: 1; }
+    .ws.ws-found .ws-dot { background: #fbbf24; opacity: 1; }
+    .ws.ws-found { cursor: pointer; }
+    .ws.ws-found:hover { border-color: rgba(251,191,36,0.5); background: rgba(251,191,36,0.06); }
+    .ws.ws-connected { border-color: rgba(52,211,153,0.35); color: var(--green); background: rgba(52,211,153,0.06); }
+    .ws.ws-connected .ws-dot { background: var(--green); opacity: 1; animation: pulse 2s infinite; }
+    .ws.ws-connected { cursor: pointer; }
+    .ws.ws-connected:hover { border-color: rgba(248,113,113,0.4); color: #fca5a5; background: rgba(248,113,113,0.06); }
+
+    /* topic input */
+    .x402-topic-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.45rem; display: block; font-weight: 600; }
+    .x402-topic { width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 0.7rem 1rem; font-size: 0.85rem; color: var(--text); font-family: inherit; resize: none; outline: none; transition: border-color 0.15s, box-shadow 0.15s; line-height: 1.55; min-height: 76px; display: block; margin-bottom: 0.9rem; }
+    .x402-topic::placeholder { color: var(--text-muted); opacity: 0.6; }
+    .x402-topic:focus { border-color: rgba(79,142,247,0.5); box-shadow: 0 0 0 3px rgba(79,142,247,0.08); }
+
+    /* component selector */
+    .comp-section { margin-bottom: 0.75rem; }
+    .comp-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.5rem; display: block; font-weight: 600; }
+    .comp-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .comp-pill { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.8rem; border-radius: 99px; border: 1px solid var(--border2); background: var(--surface2); color: var(--text-muted); font-size: 0.74rem; cursor: pointer; transition: all 0.15s; user-select: none; font-weight: 500; }
+    .comp-pill:hover { border-color: rgba(79,142,247,0.4); color: var(--text); background: var(--surface3); }
+    .comp-pill.active { border-color: rgba(79,142,247,0.5); background: rgba(79,142,247,0.1); color: var(--accent); font-weight: 600; box-shadow: 0 0 0 1px rgba(79,142,247,0.15); }
+
+    /* price row */
+    .price-row { display: flex; align-items: center; justify-content: space-between; margin: 0.8rem 0 1rem; padding: 0.6rem 0.9rem; background: var(--surface2); border-radius: var(--radius-sm); border: 1px solid var(--border2); }
+    .price-row-label { font-size: 0.76rem; color: var(--text-muted); }
+    .price-amount { font-size: 0.92rem; font-weight: 700; color: var(--text); font-family: 'SF Mono','Fira Code',monospace; }
+
+    /* pay button */
+    .x402-btn { display: inline-flex; align-items: center; gap: 0.5rem; background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%); color: #fff; border: none; padding: 0.72rem 1.5rem; border-radius: var(--radius-sm); font-size: 0.86rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s; letter-spacing: -0.01em; box-shadow: 0 2px 16px rgba(79,142,247,0.3), inset 0 1px 0 rgba(255,255,255,0.1); width: 100%; justify-content: center; }
+    .x402-btn:hover:not(:disabled) { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(79,142,247,0.4); }
+    .x402-btn:active:not(:disabled) { transform: translateY(0); }
+    .x402-btn:disabled { opacity: 0.3; cursor: not-allowed; box-shadow: none; }
+
+    /* ── Protocol steps — horizontal timeline ── */
+    .x402-steps { display: flex; align-items: flex-start; gap: 0; margin: 1.25rem 0 0; position: relative; }
+    .x402-step { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; flex: 1; font-size: 0.68rem; color: var(--text-muted); text-align: center; position: relative; }
+    .x402-step::before { content: ''; position: absolute; top: 11px; left: calc(50% + 11px); width: calc(100% - 22px); height: 1px; background: var(--border2); }
+    .x402-step:last-child::before { display: none; }
+    .x402-step .si { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 0.65rem; flex-shrink: 0; background: var(--surface2); color: var(--text-muted); position: relative; z-index: 1; transition: all 0.2s; }
+    .x402-step .sl { padding: 0 0.25rem; line-height: 1.35; }
+    .x402-step.active { color: var(--purple); }
+    .x402-step.active .si { border-color: var(--purple); background: rgba(192,132,252,0.15); color: var(--purple); animation: pulse 1.4s infinite; box-shadow: 0 0 8px rgba(192,132,252,0.3); }
+    .x402-step.active::before { background: rgba(192,132,252,0.3); }
+    .x402-step.done { color: var(--green); }
+    .x402-step.done .si { border-color: var(--green); background: rgba(52,211,153,0.12); color: var(--green); }
+    .x402-step.done::before { background: rgba(52,211,153,0.3); }
+
+    /* error */
+    .x402-error { display: none; margin-top: 1rem; color: #fca5a5; font-size: 0.78rem; background: rgba(248,113,113,0.06); border: 1px solid rgba(248,113,113,0.18); border-radius: var(--radius-sm); padding: 0.75rem 1rem; line-height: 1.6; white-space: pre-wrap; }
+
+    /* help links */
+    .x402-help { display: flex; gap: 0.4rem; margin-top: 1.1rem; flex-wrap: wrap; }
+    .x402-help a { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.7rem; color: var(--text-muted); background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 0.28rem 0.6rem; text-decoration: none; transition: all 0.15s; }
+    .x402-help a:hover { color: var(--accent); border-color: rgba(79,142,247,0.4); background: rgba(79,142,247,0.05); }
+
+    /* trace log */
+    .x402-trace { display: none; margin-top: 1.1rem; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; animation: slideUp 0.2s; }
+    .tr-row { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); font-size: 0.76rem; }
+    .tr-row:last-child { border-bottom: none; }
+    .tr-icon { min-width: 1.1rem; text-align: center; color: var(--border2); font-style: normal; font-size: 0.8rem; margin-top: 1px; }
+    .tr-body { flex: 1; min-width: 0; }
+    .tr-label { color: var(--text-dim); }
+    .tr-label code { font-family: monospace; font-size: 0.73rem; color: var(--accent); }
+    .tr-val { font-family: monospace; font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; word-break: break-all; overflow: hidden; text-overflow: ellipsis; }
+    .tr-row.tr-active { background: rgba(124,92,191,0.06); }
+    .tr-row.tr-active .tr-icon { color: var(--purple); }
+    .tr-row.tr-done { background: rgba(52,211,153,0.04); }
+    .tr-row.tr-done .tr-label { color: var(--text); }
+    .tr-row.tr-done .tr-icon { color: var(--green); }
+
+    /* result */
+    .x402-result { display: none; margin-top: 1.1rem; background: #060a0e; border: 1px solid rgba(52,211,153,0.3); border-radius: var(--radius-sm); overflow: hidden; animation: slideUp 0.3s; }
+    .result-header { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 1rem; background: rgba(52,211,153,0.06); border-bottom: 1px solid rgba(52,211,153,0.15); gap: 0.75rem; flex-wrap: wrap; }
+    .result-badge { font-size: 0.75rem; color: var(--green); font-weight: 700; letter-spacing: 0.01em; }
+    .result-tx { font-size: 0.7rem; color: var(--accent); text-decoration: none; font-family: monospace; }
+    .result-tx:hover { text-decoration: underline; }
+    .result-actions { display: flex; gap: 0.35rem; }
+    .result-btn { background: none; border: 1px solid var(--border2); color: var(--text-muted); font-size: 0.68rem; padding: 0.2rem 0.6rem; border-radius: 5px; cursor: pointer; transition: all 0.15s; font-weight: 500; }
+    .result-btn:hover { color: var(--text); border-color: var(--accent); background: rgba(79,142,247,0.05); }
+    .file-tabs { display: flex; flex-wrap: wrap; gap: 0.25rem; padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(52,211,153,0.12); }
+    .file-tab { font-size: 0.67rem; font-family: 'SF Mono','Fira Code',monospace; padding: 0.22rem 0.55rem; border-radius: 4px; cursor: pointer; color: var(--text-muted); background: none; border: 1px solid transparent; transition: all 0.12s; white-space: nowrap; }
+    .file-tab:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+    .file-tab.active { color: var(--green); background: rgba(52,211,153,0.08); border-color: rgba(52,211,153,0.25); }
+    #x402-scaffold-preview { padding: 1rem 1.1rem; font-family: 'SF Mono','Fira Code',monospace; font-size: 0.73rem; color: #a0b0c8; white-space: pre-wrap; max-height: 380px; overflow-y: auto; margin: 0; line-height: 1.65; }
+
+    /* ── Code blocks ── */
+    .code-block { background: #060a0e; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 0.85rem; }
+    .code-header { display: flex; align-items: center; justify-content: space-between; padding: 0.55rem 1rem; background: var(--surface2); border-bottom: 1px solid var(--border); }
+    .code-header span { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; }
+    .copy-btn { background: none; border: 1px solid var(--border2); color: var(--text-muted); font-size: 0.67rem; padding: 2px 8px; border-radius: 4px; cursor: pointer; transition: all 0.15s; }
+    .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+    pre { padding: 1rem 1.1rem; overflow-x: auto; font-family: 'SF Mono','Fira Code',monospace; font-size: 0.78rem; line-height: 1.65; color: #7c9cbf; margin: 0; }
+
+
+    /* ── Agent card ── */
+    .agent-card-viewer { background: #060a0e; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 1rem; }
+    .agent-card-header { display: flex; align-items: center; justify-content: space-between; padding: 0.55rem 1rem; background: var(--surface2); border-bottom: 1px solid var(--border); }
+    .agent-card-header span { font-size: 0.72rem; color: var(--text-muted); font-family: 'SF Mono','Fira Code',monospace; }
+    .live-badge { display: flex; align-items: center; gap: 0.3rem; font-size: 0.68rem; color: var(--green); font-weight: 600; }
+    .live-dot { width: 5px; height: 5px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; box-shadow: 0 0 4px var(--green); }
+    #agent-card-json { padding: 1rem 1.1rem; font-family: 'SF Mono','Fira Code',monospace; font-size: 0.74rem; line-height: 1.65; color: #7c9cbf; max-height: 420px; overflow-y: auto; white-space: pre; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="/">
+    <div class="nav-logo-icon">🌐</div>
+    <span>Solid Web Bot</span>
+  </a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/chat">Chat</a>
+    <a href="/agents" class="active">For Agents</a>
+  </div>
+  <span class="odi-badge">ODI</span>
+</nav>
+
+<main>
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-eyebrow">&#9889; A2A &middot; x402 &middot; Live on Base Sepolia</div>
+    <h1>For AI Agents</h1>
+    <p>A node on the agent internet. Any AI agent can discover, call, and pay for services autonomously &mdash; no human in the loop. The demo below lets you step through that flow yourself, paying with real USDC on Base Sepolia.</p>
+  </div>
+
+  <div class="quick-ref">
+    <div class="qr-item"><span class="qr-label">Agent card</span><span class="qr-value">/.well-known/agent-card.json</span></div>
+    <div class="qr-item"><span class="qr-label">Endpoint</span><span class="qr-value">/a2a/jsonrpc</span></div>
+    <div class="qr-item"><span class="qr-label">Protocol</span><span class="qr-value">A2A v1.0 &middot; JSON-RPC 2.0</span></div>
+    <div class="qr-item"><span class="qr-label">Payment</span><span class="qr-value">x402 &middot; USDC &middot; Base Sepolia</span></div>
+  </div>
+
+  <!-- ── Agent Card ───────────────────────────────────────────── -->
+  <h2>Agent card</h2>
+  <div class="agent-card-viewer">
+    <div class="agent-card-header">
+      <span>/.well-known/agent-card.json</span>
+      <div class="live-badge"><div class="live-dot"></div> Live</div>
+    </div>
+    <div id="agent-card-json">Loading&hellip;</div>
+  </div>
+
+  <!-- ── 1. Skills & Pricing ────────────────────────────────── -->
+  <h2>Agent-native skill</h2>
+  <table class="skills-table">
+    <thead>
+      <tr><th>Skill</th><th>Description</th><th>Output</th><th>Price</th></tr>
+    </thead>
+    <tbody>
+      <tr class="row-paid">
+        <td><span class="skill-name-col">App Scaffold</span><span class="skill-id-col">solid4-scaffold-app</span></td>
+        <td class="skill-desc-col">Generate a complete working Solid app. Select components: auth, Pod reader/writer, access control, UI. Returns structured <code style="font-size:0.75rem;color:var(--accent)">files[]</code> ready to write to disk.</td>
+        <td style="font-size:0.8rem;color:var(--text-dim)">JSON <code style="font-size:0.75rem;color:var(--accent)">files[]</code></td>
+        <td><span class="badge-paid">from $0.10 USDC</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- x402 live demo — directly below the paid skill -->
+  <div class="x402-demo" id="x402-demo">
+    <div class="x402-demo-hdr">
+      <div>
+        <div class="x402-demo-title">&#9889; Live A2A + x402 Payment Demo</div>
+        <div class="x402-demo-sub">Step through the full x402 flow &mdash; real USDC on Base Sepolia.</div>
+      </div>
+      <div id="x402-wallet-status" class="ws" onclick="walletPillClick()">
+        <span class="ws-dot"></span><span class="ws-text">Checking&hellip;</span>
+      </div>
+    </div>
+    <div class="x402-demo-body">
+      <label class="x402-topic-label" for="x402-topic">What to build</label>
+      <textarea class="x402-topic" id="x402-topic" rows="3"
+        placeholder="e.g. A health app where patients share medical records with their doctors using Solid Pods"></textarea>
+
+      <div class="comp-section">
+        <span class="comp-label">Components</span>
+        <div class="comp-grid">
+          <span class="comp-pill active" onclick="toggleComp(this,'auth')">&#128272; Auth</span>
+          <span class="comp-pill active" onclick="toggleComp(this,'pod-reader')">&#128218; Pod Reader</span>
+          <span class="comp-pill active" onclick="toggleComp(this,'pod-writer')">&#9997;&#65039; Pod Writer</span>
+          <span class="comp-pill active" onclick="toggleComp(this,'access-control')">&#128737; Access Control</span>
+          <span class="comp-pill active" onclick="toggleComp(this,'ui')">&#128444;&#65039; UI</span>
+        </div>
+      </div>
+
+      <div class="price-row">
+        <span class="price-row-label">Payment</span>
+        <span class="price-amount">$<span id="display-price">0.50</span> USDC</span>
+      </div>
+
+      <button class="x402-btn" id="x402-pay-btn" onclick="x402Pay()">
+        &#128179; Pay $<span id="btn-price">0.50</span> USDC &mdash; Generate Scaffold
+      </button>
+
+      <div class="x402-steps">
+        <div class="x402-step" id="xs-0"><span class="si">1</span><span class="sl">Connect<br>wallet</span></div>
+        <div class="x402-step" id="xs-1"><span class="si">2</span><span class="sl">Base<br>Sepolia</span></div>
+        <div class="x402-step" id="xs-2"><span class="si">3</span><span class="sl">Sign<br>EIP-3009</span></div>
+        <div class="x402-step" id="xs-3"><span class="si">4</span><span class="sl">Settle<br>on-chain</span></div>
+        <div class="x402-step" id="xs-4"><span class="si">5</span><span class="sl">Files<br>delivered</span></div>
+      </div>
+
+      <div class="x402-trace" id="x402-trace">
+        <div class="tr-row" id="tr-0"><i class="tr-icon">&#9675;</i><div class="tr-body"><div class="tr-label"><code>POST /api/scaffold</code> &mdash; probe for 402</div><div class="tr-val" id="tv-0"></div></div></div>
+        <div class="tr-row" id="tr-1"><i class="tr-icon">&#9675;</i><div class="tr-body"><div class="tr-label">Sign <code>EIP-3009 TransferWithAuthorization</code></div><div class="tr-val" id="tv-1"></div></div></div>
+        <div class="tr-row" id="tr-2"><i class="tr-icon">&#9675;</i><div class="tr-body"><div class="tr-label">Retry with <code>X-PAYMENT</code> header &rarr; facilitator settles</div><div class="tr-val" id="tv-2"></div></div></div>
+        <div class="tr-row" id="tr-3"><i class="tr-icon">&#9675;</i><div class="tr-body"><div class="tr-label">Scaffold delivered</div><div class="tr-val" id="tv-3"></div></div></div>
+      </div>
+
+      <div class="x402-result" id="x402-result">
+        <div class="result-header">
+          <span class="result-badge">&#10003; Scaffold delivered</span>
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <a class="result-tx" id="x402-tx-link" href="#" target="_blank" style="display:none">View tx &rarr;</a>
+            <div class="result-actions">
+              <button class="result-btn" onclick="x402CopyScaffold(this)">Copy</button>
+              <button class="result-btn" onclick="x402DownloadScaffold()">Download all</button>
+            </div>
+          </div>
+        </div>
+        <div class="file-tabs" id="x402-file-tabs" style="display:none"></div>
+        <pre id="x402-scaffold-preview"></pre>
+      </div>
+
+      <div class="x402-error" id="x402-error"></div>
+
+      <div class="x402-help">
+        <a href="https://metamask.io/download" target="_blank">&#129514; Install MetaMask</a>
+        <a href="https://faucet.circle.com" target="_blank">&#128176; Get testnet USDC</a>
+        <a href="https://sepolia.basescan.org" target="_blank">&#128269; Base Sepolia explorer</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 2. Quickstart ──────────────────────────────────────── -->
+  <h2>Quickstart</h2>
+  <div class="code-block">
+    <div class="code-header"><span>1. Discover &mdash; fetch agent card</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre>curl https://solid-bot.dev.tne.ai/.well-known/agent-card.json</pre>
+  </div>
+  <div class="code-block">
+    <div class="code-header"><span>2. Call a free skill &mdash; A2A JSON-RPC format</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre>const res = await fetch('https://solid-bot.dev.tne.ai/a2a/jsonrpc', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    jsonrpc: '2.0', method: 'message/send', id: 1,
+    params: { message: { kind: 'message', parts: [
+      { kind: 'text', text: 'Is Solid a good fit for a health app where patients own their records?' }
+    ]}}
+  })
+});
+const { result } = await res.json();
+console.log(result.parts[0].text);</pre>
+  </div>
+  <div class="code-block">
+    <div class="code-header"><span>3. Paid skill &mdash; @x402/fetch handles 402 automatically</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre>// npm install @x402/fetch @x402/evm viem
+import fs from 'fs/promises';
+import { wrapFetchWithPayment, x402Client } from '@x402/fetch';
+import { ExactEvmScheme } from '@x402/evm';
+import { privateKeyToAccount } from 'viem/accounts';
+
+// Agent's funded wallet (needs USDC on Base Sepolia)
+const account = privateKeyToAccount(process.env.EVM_PRIVATE_KEY);
+const client = new x402Client();
+client.register('eip155:*', new ExactEvmScheme(account));
+
+// Wrap fetch — 402 &#x2192; sign &#x2192; retry happens automatically
+const fetch402 = wrapFetchWithPayment(globalThis.fetch, client);
+
+const res = await fetch402('https://solid-bot.dev.tne.ai/api/scaffold', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    topic: 'A health app where patients own their records',
+    components: ['auth', 'pod-reader', 'pod-writer']  // $0.30 USDC
+  })
+});
+
+const { files } = await res.json();
+// files[] — write directly to disk
+for (const { filename, content } of files) {
+  await fs.writeFile(filename, content);
+}</pre>
+  </div>
+
+</main>
+
+<script>
+  // ── Agent Card (loaded after DOM ready) ──────────────────────────────────────
+  function loadAgentCard() {
+    const el = document.getElementById('agent-card-json');
+    if (!el) return;
+    fetch('/.well-known/agent-card.json')
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(d => { el.textContent = JSON.stringify(d, null, 2); })
+      .catch(e => { el.textContent = 'Could not load: ' + e.message; });
+  }
+
+  function copyCode(btn) {
+    navigator.clipboard.writeText(btn.closest('.code-block').querySelector('pre').textContent)
+      .then(() => { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 1500); });
+  }
+
+  // ── Component selector ───────────────────────────────────────────────────────
+  const COMP_PRICE = 0.10; // $ per component
+  function toggleComp(pill, _id) {
+    const active = document.querySelectorAll('.comp-pill.active');
+    if (pill.classList.contains('active') && active.length === 1) return;
+    pill.classList.toggle('active');
+    updatePrice();
+  }
+  function getComponents() {
+    return Array.from(document.querySelectorAll('.comp-pill.active'))
+      .map(p => p.getAttribute('onclick').match(/'([^']+)'\)/)[1]);
+  }
+  function calcPrice(comps) {
+    const n = Math.max(1, Math.min(comps.length, 5));
+    return (n * COMP_PRICE).toFixed(2);
+  }
+  function updatePrice() {
+    const p = calcPrice(getComponents());
+    const d = document.getElementById('display-price');
+    const b = document.getElementById('btn-price');
+    if (d) d.textContent = p;
+    if (b) b.textContent = p;
+  }
+
+  // ── File tabs ────────────────────────────────────────────────────────────────
+  let _scaffoldFiles = [];
+  function showFiles(files) {
+    _scaffoldFiles = files || [];
+    const tabsEl = document.getElementById('x402-file-tabs');
+    const preview = document.getElementById('x402-scaffold-preview');
+    if (!_scaffoldFiles.length || !tabsEl) return;
+    tabsEl.style.display = 'flex';
+    tabsEl.innerHTML = _scaffoldFiles.map((f, i) =>
+      `<span class="file-tab${i===0?' active':''}" onclick="selectFile(${i})">${f.filename}</span>`
+    ).join('');
+    preview.textContent = _scaffoldFiles[0].content;
+  }
+  function selectFile(idx) {
+    _scaffoldFiles.forEach((_, i) => {
+      const tab = document.querySelectorAll('.file-tab')[i];
+      if (tab) tab.classList.toggle('active', i === idx);
+    });
+    const preview = document.getElementById('x402-scaffold-preview');
+    if (preview && _scaffoldFiles[idx]) preview.textContent = _scaffoldFiles[idx].content;
+  }
+
+
+    // ── x402 helpers ────────────────────────────────────────────────────────────
+  const BASE_SEPOLIA = {
+    id: 84532, hex: '0x14A34', name: 'Base Sepolia Testnet',
+    rpc: 'https://sepolia.base.org',
+    explorer: 'https://sepolia.basescan.org'
+  };
+  let x402From = null;
+
+  const STEP_LABELS = [
+    ['Connect', 'wallet'],
+    ['Base', 'Sepolia'],
+    ['Sign', 'EIP-3009'],
+    ['Settle', 'on-chain'],
+    ['Files', 'delivered']
+  ];
+
+  function xsSet(n, state, text) {
+    const el = document.getElementById('xs-' + n);
+    if (!el) return;
+    el.className = 'x402-step' + (state ? ' ' + state : '');
+    const si = el.querySelector('.si');
+    const sl = el.querySelector('.sl');
+    if (si) si.textContent = state === 'done' ? '\u2713' : state === 'active' ? '\u25cf' : String(n + 1);
+    if (sl && text === undefined) {
+      const lbl = STEP_LABELS[n];
+      sl.innerHTML = Array.isArray(lbl) ? lbl[0] + '<br>' + lbl[1] : lbl;
+    } else if (sl && text !== undefined) {
+      sl.innerHTML = text;
+    }
+  }
+  function xsReset() { for (let i = 0; i < 5; i++) xsSet(i, ''); }
+
+  function trSet(n, state, val) {
+    const row = document.getElementById('tr-' + n);
+    const icon = row && row.querySelector('.tr-icon');
+    const valEl = document.getElementById('tv-' + n);
+    if (row) row.className = 'tr-row' + (state ? ' tr-' + state : '');
+    if (icon) icon.textContent = state === 'done' ? '\u2713' : state === 'active' ? '\u26a1' : '\u25cb';
+    if (valEl && val !== undefined) valEl.textContent = val;
+  }
+
+  function setWalletStatus(cls, text) {
+    const el = document.getElementById('x402-wallet-status');
+    if (!el) return;
+    el.className = 'ws ' + cls;
+    const t = el.querySelector('.ws-text');
+    if (t) t.textContent = text;
+  }
+
+  // ── provider resolver (bypasses multi-wallet aggregators like evmAsk.js) ───
+  let _provider = null;
+  function getProvider() {
+    if (_provider) return _provider;
+    if (!window.ethereum) return null;
+    const list = window.ethereum.providers;
+    if (Array.isArray(list) && list.length) {
+      _provider = list.find(p => p.isMetaMask && !p.isCoinbaseWallet)
+                || list.find(p => p.isMetaMask)
+                || list[0];
+    } else {
+      _provider = window.ethereum;
+    }
+    return _provider;
+  }
+
+  function x402CopyScaffold(btn) {
+    const text = document.getElementById('x402-scaffold-preview').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 1500);
+    });
+  }
+  async function x402DownloadScaffold() {
+    if (!_scaffoldFiles.length) return;
+    const topicEl = document.getElementById('x402-topic');
+    const topic = topicEl ? topicEl.value.trim() : '';
+    try {
+      const res = await fetch('/api/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files: _scaffoldFiles, topic }),
+      });
+      if (!res.ok) throw new Error('Download failed: HTTP ' + res.status);
+      const blob = await res.blob();
+      const slug = topic.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/, '') || 'solid-app';
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = slug + '.zip';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch (e) {
+      alert('Download error: ' + e.message);
+    }
+  }
+
+  // ── Wallet pill click — connect when found but not yet connected ────────────
+  async function walletPillClick() {
+    const el = document.getElementById('x402-wallet-status');
+    if (!el) return;
+    if (el.classList.contains('ws-connected')) {
+      try {
+        await getProvider().request({
+          method: 'wallet_revokePermissions',
+          params: [{ eth_accounts: {} }]
+        });
+      } catch (_) {}
+      x402From = null;
+      setWalletStatus('ws-found', 'Wallet found \u2014 click to connect');
+      return;
+    }
+    if (!el.classList.contains('ws-found')) return;
+    const prov = getProvider();
+    if (!prov) return;
+    setWalletStatus('ws-found', 'Connecting\u2026');
+    try {
+      const accounts = await prov.request({ method: 'eth_requestAccounts' });
+      if (accounts && accounts.length) {
+        x402From = accounts[0];
+        setWalletStatus('ws-connected', '\u25cf Connected \u00b7 ' + x402From.slice(0,6) + '\u2026' + x402From.slice(-4));
+      } else {
+        setWalletStatus('ws-found', 'Wallet found \u2014 click to connect');
+      }
+    } catch (e) {
+      setWalletStatus('ws-found', e.code === 4001 ? 'Wallet found \u2014 click to connect' : 'Connect failed \u2014 try again');
+    }
+  }
+
+  // ── x402 payment ────────────────────────────────────────────────────────────
+  async function x402Pay() {
+    const btn = document.getElementById('x402-pay-btn');
+    if (!btn || btn.disabled) return;
+
+    const errBox  = document.getElementById('x402-error');
+    const result  = document.getElementById('x402-result');
+    const trace   = document.getElementById('x402-trace');
+
+    btn.disabled = true;
+    btn.textContent = 'Starting\u2026';
+    errBox.style.display  = 'none';
+    errBox.textContent    = '';
+    result.style.display  = 'none';
+    trace.style.display   = 'none';
+    xsReset();
+    console.log('[x402] --- payment flow start ---');
+
+    try {
+      // ── Step 0: connect wallet ──────────────────────────────────────────────
+      xsSet(0, 'active');
+      btn.textContent = 'Connecting wallet\u2026';
+
+      if (!window.ethereum) {
+        throw new Error('MetaMask not found. Install it at metamask.io/download, then reload.');
+      }
+
+      const withTimeout = (p, ms, msg) =>
+        Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(msg)), ms))]);
+
+      let accounts;
+      try {
+        accounts = await withTimeout(
+          getProvider().request({ method: 'eth_requestAccounts' }),
+          12000,
+          'Wallet request timed out. You may have multiple wallet extensions conflicting — disable all except MetaMask, then reload.'
+        );
+      } catch (we) {
+        if (we.code === 4001) throw new Error('Connection refused. Please approve the request in MetaMask.');
+        throw new Error(we.message || 'Wallet request failed.');
+      }
+      if (!accounts || !accounts.length) throw new Error('No accounts returned. Is MetaMask unlocked?');
+
+      x402From = accounts[0];
+      xsSet(0, 'done', 'Connected \u00b7 ' + x402From.slice(0,6) + '\u2026' + x402From.slice(-4));
+      setWalletStatus('ws-connected', '\u25cf Connected \u00b7 ' + x402From.slice(0,6) + '\u2026' + x402From.slice(-4));
+
+      // ── Step 1: ensure Base Sepolia ─────────────────────────────────────────
+      xsSet(1, 'active');
+      btn.textContent = 'Checking network\u2026';
+      const rawChain = await getProvider().request({ method: 'eth_chainId' });
+      const chainId = parseInt(rawChain, 16);
+
+      if (chainId !== BASE_SEPOLIA.id) {
+        btn.textContent = 'Switching network \u2014 check MetaMask\u2026';
+        try {
+          await getProvider().request({ method: 'wallet_switchEthereumChain', params: [{ chainId: BASE_SEPOLIA.hex }] });
+        } catch (se) {
+          if (se.code === 4001) throw new Error('Network switch cancelled. Switch to Base Sepolia in MetaMask and try again.');
+          if (se.code === 4902 || se.code === -32603) {
+            await getProvider().request({ method: 'wallet_addEthereumChain', params: [{
+              chainId: BASE_SEPOLIA.hex, chainName: BASE_SEPOLIA.name,
+              nativeCurrency: { name: 'Ethereum', symbol: 'ETH', decimals: 18 },
+              rpcUrls: [BASE_SEPOLIA.rpc], blockExplorerUrls: [BASE_SEPOLIA.explorer]
+            }]});
+          } else throw new Error('Network switch failed: ' + se.message);
+        }
+      }
+      xsSet(1, 'done', 'On Base Sepolia');
+
+      // ── Probe /api/scaffold for 402 ─────────────────────────────────────────
+      btn.textContent = 'Fetching payment requirements\u2026';
+      trace.style.display = 'block';
+      for (let i = 0; i < 4; i++) trSet(i, '', '');
+      trSet(0, 'active');
+
+      const topicEl = document.getElementById('x402-topic');
+      const topic = (topicEl && topicEl.value.trim()) || 'a general-purpose Solid app';
+      const components = getComponents();
+      const body = { framework: 'vanilla', dataType: 'notes', accessPattern: 'private', topic, components };
+
+      const probeRes = await fetch('/api/scaffold', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (probeRes.status === 200) {
+        const d = await probeRes.json();
+        trSet(0, 'done', 'HTTP 200 (payment gate inactive)');
+        for (let i = 1; i <= 4; i++) xsSet(i, 'done');
+        if (d.files && d.files.length) {
+          showFiles(d.files);
+        } else {
+          document.getElementById('x402-scaffold-preview').textContent =
+            (d.scaffold || JSON.stringify(d, null, 2)).slice(0, 800);
+        }
+        result.style.display = 'block';
+        btn.textContent = '\u2705 Done \u2014 Try again?'; btn.disabled = false; return;
+      }
+
+      if (probeRes.status !== 402) {
+        const body2 = await probeRes.text().catch(() => '');
+        throw new Error('Unexpected server response: HTTP ' + probeRes.status + (body2 ? '\n' + body2.slice(0,200) : ''));
+      }
+
+      const probeData = await probeRes.json();
+      const req = probeData.accepts && probeData.accepts[0];
+      if (!req) throw new Error('Server returned 402 but no payment requirements. Check server logs.');
+
+      trSet(0, 'done', 'HTTP 402 \u00b7 ' + (Number(req.maxAmountRequired)/1e6).toFixed(2) + ' USDC \u2192 ' + req.payTo.slice(0,10) + '\u2026');
+
+      // ── Step 2: sign EIP-3009 ────────────────────────────────────────────────
+      xsSet(2, 'active', 'MetaMask will ask you to sign\u2026');
+      btn.textContent = 'Sign in MetaMask\u2026';
+      trSet(1, 'active', 'Waiting for MetaMask\u2026');
+
+      const nonce = '0x' + Array.from(
+        crypto.getRandomValues(new Uint8Array(32))
+      ).map(b => b.toString(16).padStart(2, '0')).join('');
+      const now = Math.floor(Date.now() / 1000);
+      const validAfter  = String(now - 60);
+      const validBefore = String(now + 3600);
+
+      const typedData = JSON.stringify({
+        types: {
+          EIP712Domain: [
+            { name: 'name',              type: 'string'  },
+            { name: 'version',           type: 'string'  },
+            { name: 'chainId',           type: 'uint256' },
+            { name: 'verifyingContract', type: 'address' }
+          ],
+          TransferWithAuthorization: [
+            { name: 'from',        type: 'address' },
+            { name: 'to',         type: 'address' },
+            { name: 'value',       type: 'uint256' },
+            { name: 'validAfter',  type: 'uint256' },
+            { name: 'validBefore', type: 'uint256' },
+            { name: 'nonce',       type: 'bytes32'  }
+          ]
+        },
+        domain: {
+          name: (req.extra && req.extra.name) || 'USDC',
+          version: String((req.extra && req.extra.version) || 2),
+          chainId: BASE_SEPOLIA.id,
+          verifyingContract: req.asset
+        },
+        primaryType: 'TransferWithAuthorization',
+        message: {
+          from: x402From,
+          to: req.payTo,
+          value: req.maxAmountRequired,
+          validAfter,
+          validBefore,
+          nonce
+        }
+      });
+
+      let sig;
+      try {
+        sig = await getProvider().request({ method: 'eth_signTypedData_v4', params: [x402From, typedData] });
+      } catch (se) {
+        if (se.code === 4001) throw new Error('Signature cancelled. Please approve the signing request in MetaMask.');
+        throw new Error('Signing failed: ' + se.message);
+      }
+
+      const xPayment = btoa(JSON.stringify({
+        x402Version: 1, scheme: 'exact', network: req.network,
+        payload: { signature: sig, authorization: { from: x402From, to: req.payTo,
+          value: req.maxAmountRequired, validAfter, validBefore, nonce } }
+      }));
+
+      xsSet(2, 'done', 'Signed');
+      trSet(1, 'done', 'sig: ' + sig.slice(0,20) + '\u2026');
+
+      // ── Step 3: settle ──────────────────────────────────────────────────────
+      xsSet(3, 'active', 'Settling on-chain\u2026');
+      btn.textContent = 'Settling payment\u2026';
+      trSet(2, 'active', 'Submitting to facilitator\u2026');
+      if (x402From) {
+        const tv2act = document.getElementById('tv-2');
+        if (tv2act) tv2act.innerHTML = 'Submitting to facilitator\u2026 · <a href="' + BASE_SEPOLIA.explorer + '/address/' + x402From + '#tokentxns" target="_blank" style="color:var(--accent);text-decoration:none;font-family:monospace;">watch wallet \u2197</a>';
+      }
+
+      const paidRes = await fetch('/api/scaffold', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-PAYMENT': xPayment },
+        body: JSON.stringify(body)
+      });
+      // Headers arrive before body — read txHash immediately while scaffold generates
+      let earlyTxHash = null;
+      try {
+        const pr = paidRes.headers.get('X-PAYMENT-RESPONSE');
+        if (pr) earlyTxHash = JSON.parse(pr).transaction || null;
+      } catch {}
+
+      trSet(2, 'done', 'HTTP 200 \u00b7 payment confirmed');
+      if (earlyTxHash) {
+        const tv2 = document.getElementById('tv-2');
+        if (tv2) tv2.innerHTML = 'HTTP 200 \u00b7 payment confirmed \u00b7 <a href="' + BASE_SEPOLIA.explorer + '/tx/' + earlyTxHash + '" target="_blank" style="color:var(--accent);text-decoration:none;font-family:monospace;">' + earlyTxHash.slice(0,10) + '\u2026' + earlyTxHash.slice(-6) + ' \u2197</a>';
+      }
+      xsSet(3, 'done', earlyTxHash
+        ? 'Settled<br><a href="' + BASE_SEPOLIA.explorer + '/tx/' + earlyTxHash + '" target="_blank" style="color:var(--accent);font-size:0.62rem;text-decoration:none;">' + earlyTxHash.slice(0,6) + '\u2026\u2197</a>'
+        : 'Settled');
+
+      btn.textContent = 'Generating scaffold\u2026';
+
+      // Now wait for the body (scaffold generation in progress)
+      const data = await paidRes.json();
+      const txHash = data.txHash || earlyTxHash;
+
+      if (data.error) throw new Error('Scaffold failed: ' + data.error);
+
+      // ── Step 4: done ────────────────────────────────────────────────────────
+      trSet(3, 'done', txHash ? 'tx: ' + txHash.slice(0,10) + '\u2026' + txHash.slice(-6) : 'Scaffold received');
+      xsSet(4, 'done', 'Scaffold delivered');
+
+      if (data.files && data.files.length) {
+        showFiles(data.files);
+      } else {
+        document.getElementById('x402-scaffold-preview').textContent =
+          data.scaffold || JSON.stringify(data, null, 2);
+      }
+
+      if (txHash) {
+        const link = document.getElementById('x402-tx-link');
+        link.href = BASE_SEPOLIA.explorer + '/tx/' + txHash;
+        link.textContent = txHash.slice(0,10) + '\u2026' + txHash.slice(-6) + ' \u2197';
+        link.style.display = '';
+      }
+      result.style.display = 'block';
+      btn.textContent = '\u2705 Paid \u2014 Try again?'; btn.disabled = false;
+
+    } catch (e) {
+      console.error('[x402] ERROR:', e);
+      errBox.textContent = e.message || String(e);
+      errBox.style.display = 'block';
+      btn.textContent = '\ud83d\udcb3 Connect & Pay $' + calcPrice(getComponents()) + ' USDC';
+      btn.disabled = false;
+    }
+  }
+
+  // ── init ─────────────────────────────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', async () => {
+    loadAgentCard();
+    document.querySelectorAll('pre').forEach(pre => {
+      pre.textContent = pre.textContent.replace(/https:\/\/solid-bot\.dev\.tne\.ai/g, location.origin);
+    });
+    updatePrice();
+
+    if (!window.ethereum) {
+      setWalletStatus('ws-none', 'No wallet \u2014 install MetaMask');
+    } else {
+      try {
+        const accs = await getProvider().request({ method: 'eth_accounts' });
+        if (accs && accs.length) {
+          x402From = accs[0];
+          setWalletStatus('ws-connected', '\u25cf Connected \u00b7 ' + x402From.slice(0,6) + '\u2026' + x402From.slice(-4));
+        } else {
+          setWalletStatus('ws-found', 'Wallet found \u2014 click to connect');
+        }
+      } catch (e) {
+        setWalletStatus('ws-found', 'Wallet found \u2014 click to connect');
+      }
+      getProvider().on('accountsChanged', accs => {
+        if (accs && accs.length) {
+          x402From = accs[0];
+          setWalletStatus('ws-connected', '\u25cf Connected \u00b7 ' + x402From.slice(0,6) + '\u2026' + x402From.slice(-4));
+        } else {
+          x402From = null;
+          setWalletStatus('ws-found', 'Wallet found \u2014 click to connect');
+        }
+      });
+    }
+  });
+
+</script>
+</body>
+</html>
